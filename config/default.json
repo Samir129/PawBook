@@ -1,0 +1,3 @@
+{
+    "mongoDBURI" : "mongodb+srv://rwaccess:rwaccess123@mernp1.jolduig.mongodb.net/?retryWrites=true&w=majority&appName=MERNP1"
+}

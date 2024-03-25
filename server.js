@@ -1,6 +1,10 @@
 const express = require('express');
+const connectDB = require('./config/db');
 
 const app = express();
+
+//Connect to Mongo
+connectDB()
 
 const PORT = process.env.PORT || 5001;
 
