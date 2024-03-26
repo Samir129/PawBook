@@ -7,7 +7,9 @@ module.exports = function (req, res, next) {
 
   // Check if no token
   if (!token) {
-    return res.status(401).json({ msg: "No token, auth failure" });
+    return res
+      .status(401)
+      .json({ errors: [{ msg: "No token, auth failure" }] });
   }
 
   // Verify token
@@ -17,6 +19,6 @@ module.exports = function (req, res, next) {
     req.user = decoded.user;
     next();
   } catch (error) {
-    res.status(401).json({ msg: "Invalid token" });
+    res.status(401).json({ errors: [{ msg: "Invalid token" }] });
   }
 };
