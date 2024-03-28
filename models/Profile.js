@@ -13,15 +13,18 @@ const ProfileSchema = new mongoose.Schema({
   },
   age: {
     type: String,
+    required: true,
   },
   gender: {
     type: String,
+    required: true,
   },
   location: {
     type: String,
   },
-  interest: {
-    type: String,
+  interests: {
+    type: [String],
+    required: true,
   },
   socials: {
     youtube: {
@@ -40,11 +43,11 @@ const ProfileSchema = new mongoose.Schema({
   health: {
     medicalConditions: {
       type: String,
-      require: false,
+      required: false,
     },
     vaccination: {
       type: String,
-      require: false,
+      required: false,
     },
   },
   date: {
