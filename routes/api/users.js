@@ -27,6 +27,7 @@ router.post(
     body("email").optional().isEmail().withMessage("Invalid email format"),
   ],
   async (req, res) => {
+    console.debug("User route begin");
     // Access validation results
     const errors = validationResult(req);
 
@@ -66,15 +67,15 @@ router.post(
       // 3.Encrypt password
       // Generate a salt
       const salt = await bcrypt.genSalt(10);
-      console.debug("salt generated")
+      console.debug("salt generated");
 
       // encrypt the password using the salt
       user.password = await bcrypt.hash(password, salt);
-      console.debug("password hashed")
+      console.debug("password hashed");
 
       // save the user in the database
       await user.save();
-      console.log("User saved in the database")
+      console.log("User saved in the database");
 
       // 4. Return jsonwebtoken
       const payload = {
@@ -92,13 +93,13 @@ router.post(
           res.json({ token });
         }
       );
-      
+
       console.debug("User registered");
-    
     } catch (error) {
       console.error(error.message);
-      res.status(500).json({ errors: [{ msg: "Internal Server Error" }] });
+      res.status(500).json({ errors: [{ msg: "Server Error" }] });
     }
+    console.debug("User route end");
   }
 );
 
