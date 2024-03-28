@@ -68,7 +68,7 @@ router.post(
       facebook,
       instagram,
       medicalConditions,
-      vaccination
+      vaccination,
     } = req.body;
 
     // Build profile object
@@ -77,12 +77,13 @@ router.post(
     profileFields.age = age;
     profileFields.gender = gender;
 
+    profileFields.interests = interests.split(",").map((skill) => skill.trim());
+    console.debug(profileFields.interests);
+
+    // Optional fields, set if not null
     if (breed) profileFields.breed = breed;
     if (bio) profileFields.bio = bio;
     if (location) profileFields.location = location;
-
-    profileFields.interests = interests.split(",").map((skill) => skill.trim());
-    console.debug(profileFields.interests);
 
     // Build socials array
     profileFields.social = {};
@@ -93,8 +94,9 @@ router.post(
 
     // Build health array
     profileFields.health = {};
-    if(medicalConditions) profileFields.social.medicalConditions = medicalConditions;
-    if(vaccination) profileFields.social.vaccination = vaccination;
+    if (medicalConditions)
+      profileFields.social.medicalConditions = medicalConditions;
+    if (vaccination) profileFields.social.vaccination = vaccination;
 
     try {
       let profile = await Profile.findOne({ user: req.user.id });
@@ -121,5 +123,53 @@ router.post(
     console.debug("Post Profile end");
   }
 );
+
+/**
+ * @route   GET api/profile
+ * @desc    GET all users profile
+ * @access  Public
+ */
+router.get("/", async (req, res) => {
+  console.debug("Get all profiles begin");
+  try {
+    const profiles = await Profile.find().populate("user", ["name", "avatar"]);
+    res.json(profiles);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ errors: { msg: "Server Error" } });
+  }
+  console.debug("Get all profiles end");
+});
+
+/**
+ * @route   GET api/profile/:userid
+ * @desc    GET user profile based on userid
+ * @access  Public
+ */
+router.get("/:userId", async (req, res) => {
+  console.debug("Get profile by id begin");
+  try {
+    const profile = await Profile.findOne({ user: req.params.userId }).populate(
+      "user",
+      ["name", "avatar"]
+    );
+    if (!profile) {
+      console.error("No profile found");
+      res
+        .status(404)
+        .json({ errors: { msg: "No profile found for the userId" } });
+    }
+    res.json(profile);
+  } catch (error) {
+    console.error(error);
+    if (error.kind === "ObjectId") {
+      return res
+        .status(404)
+        .json({ errors: { msg: "No profile found for the userId" } });
+    }
+    res.status(500).send({ errors: { msg: "Server Error" } });
+  }
+  console.debug("Get profile by id end");
+});
 
 module.exports = router;
