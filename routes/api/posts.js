@@ -63,7 +63,7 @@ router.get("/", auth, async (req, res) => {
 
 /**
  * @route   GET api/posts/:id
- * @desc    Retrieve post by IDw
+ * @desc    Retrieve post by ID
  * @access  private
  */
 router.get("/:id", auth, async (req, res) => {
@@ -169,6 +169,90 @@ router.put("/unlike/:id", auth, async (req, res) => {
     return res.send("Post unliked");
   } catch (error) {
     console.log(error);
+    res.status(500).json({ errors: { msg: "Server Error" } });
+  }
+});
+
+/**
+ * @route   POST api/posts/comment/:id
+ * @desc    Comment on a post
+ * @access  private
+ */
+router.post(
+  "/comment/:id",
+  [auth, body("text", "Text is required").not().isEmpty()],
+  async (req, res) => {
+    console.debug("Comment post route begin");
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    //valid request, proceed
+    try {
+      const user = await User.findById(req.user.id).select("-password");
+      const post = await Post.findById(req.params.id);
+
+      const newComment = {
+        text: req.body.text,
+        name: user.name,
+        avatar: user.avatar,
+        user: req.user.id,
+      };
+
+      post.comments.unshift(newComment);
+
+      await post.save();
+
+      res.json(post.comments);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ errors: { msg: "Server Error" } });
+    }
+
+    console.debug("Comment Post route end");
+  }
+);
+
+/**
+ * @route   DELETE api/posts/comment/:id/:comment_id
+ * @desc    Delete comment on a post
+ * @access  private
+ */
+router.delete("/comment/:id/:comment_id", auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    // pull out comment
+    const comment = post.comments.find(
+      (comment) => comment.id === req.params.comment_id
+    );
+
+    // Comment not found
+    if (!comment) {
+      return res.status(404).json({ errors: { msg: "Comment not found" } });
+    }
+
+    // User is authorized to delete the comment
+    if (comment.user.toString() !== req.user.id) {
+      return res
+        .status(401)
+        .json({ errors: { msg: "User not authorized to delete the comment" } });
+    }
+
+    // Get remove index
+    const removeIndex = post.comments
+      .map((comment) => comment.user.toString())
+      .indexOf(req.user.id);
+
+    post.comments.splice(removeIndex, 1);
+
+    await post.save();
+
+    return res.json(post.comments);
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ errors: { msg: "Server Error" } });
   }
 });
